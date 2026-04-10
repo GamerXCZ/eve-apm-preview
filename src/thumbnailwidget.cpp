@@ -867,18 +867,32 @@ bool ThumbnailWidget::nativeEvent(const QByteArray &eventType, void *message,
 void ThumbnailWidget::showEvent(QShowEvent *event) {
   QWidget::showEvent(event);
 
-  // Apply WS_EX_NOACTIVATE to prevent window from becoming active/foreground
-  // This allows clicks and drags without stealing focus from EVE clients
   HWND hwnd = reinterpret_cast<HWND>(winId());
+
   LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
   SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
 
   setupDwmThumbnail();
+
   if (m_overlayWidget) {
-    m_overlayWidget->setGeometry(geometry());
-    m_overlayWidget->show();
-    m_overlayWidget->raise();
+      m_overlayWidget->setGeometry(geometry());
+      m_overlayWidget->show();
+      m_overlayWidget->raise();
   }
+
+  const DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+  const DWORD DWMWCP_DONOTROUND = 1;
+  DwmSetWindowAttribute(hwnd,
+      DWMWA_WINDOW_CORNER_PREFERENCE,
+      &DWMWCP_DONOTROUND,
+      sizeof(DWMWCP_DONOTROUND));
+
+  const DWORD DWMWA_BORDER_COLOR = 34;
+  COLORREF borderColor = 0xFFFFFFFE;
+  DwmSetWindowAttribute(hwnd,
+      DWMWA_BORDER_COLOR,
+      &borderColor,
+      sizeof(borderColor));
 }
 
 void ThumbnailWidget::hideEvent(QHideEvent *event) {
