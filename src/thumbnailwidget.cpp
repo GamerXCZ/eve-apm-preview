@@ -945,6 +945,29 @@ OverlayWidget::OverlayWidget(QWidget *parent)
     }
     update();
   });
+  HWND hwnd = reinterpret_cast<HWND>(winId());
+  LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+  /*SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREDRAW);
+  SetWindowLongPtr(hwnd, GWL_EXSTYLE,
+      exStyle
+      | WS_EX_NOACTIVATE
+      | WS_EX_TRANSPARENT
+      | WS_EX_LAYERED);*/
+
+  const DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+  const DWORD DWMWCP_DONOTROUND = 1;
+  DwmSetWindowAttribute(hwnd,
+      DWMWA_WINDOW_CORNER_PREFERENCE,
+      &DWMWCP_DONOTROUND,
+      sizeof(DWMWCP_DONOTROUND));
+
+  const DWORD DWMWA_BORDER_COLOR = 34;
+  COLORREF borderColor = 0xFFFFFFFE;
+  DwmSetWindowAttribute(hwnd,
+      DWMWA_BORDER_COLOR,
+      &borderColor,
+      sizeof(borderColor));
 }
 
 void OverlayWidget::setOverlays(const QVector<OverlayElement> &overlays) {
