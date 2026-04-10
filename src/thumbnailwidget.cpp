@@ -1,4 +1,4 @@
-#include "thumbnailwidget.h"
+﻿#include "thumbnailwidget.h"
 #include "config.h"
 #include <QApplication>
 #include <QDebug>
@@ -77,28 +77,50 @@ void ThumbnailWidget::setCustomName(const QString &customName) {
   }
 }
 
-void ThumbnailWidget::setSystemName(const QString &systemName) {
-  if (m_systemName == systemName) {
-    return;
-  }
+void ThumbnailWidget::setSystemName(const QString& systemName) {
+    if (m_systemName == systemName) {
+        return;
+    }
 
-  m_systemName = systemName;
+    m_systemName = systemName;
 
-  const Config &cfg = Config::instance();
+    //  start animace teček
+    m_dotsCount = 3;
 
-  QColor customColor = cfg.getSystemNameColor(m_systemName);
-  if (customColor.isValid()) {
-    m_cachedSystemColor = customColor;
-  } else if (cfg.useUniqueSystemNameColors()) {
-    m_cachedSystemColor = OverlayInfo::generateUniqueColor(m_systemName);
-  } else {
-    m_cachedSystemColor = cfg.systemNameColor();
-  }
+    if (!m_dotsTimer) {
+        m_dotsTimer = new QTimer(this);
 
-  updateOverlays();
-  if (m_overlayWidget) {
-    m_overlayWidget->setSystemName(systemName);
-  }
+        connect(m_dotsTimer, &QTimer::timeout, this, [this]() {
+            if (m_dotsCount > 0) {
+                m_dotsCount--;
+                updateOverlays(); //  refresh textu
+            }
+            else {
+                m_dotsTimer->stop();
+            }
+            });
+    }
+
+    m_dotsTimer->start(1000); // 1 sekunda
+
+    const Config& cfg = Config::instance();
+
+    QColor customColor = cfg.getSystemNameColor(m_systemName);
+    if (customColor.isValid()) {
+        m_cachedSystemColor = customColor;
+    }
+    else if (cfg.useUniqueSystemNameColors()) {
+        m_cachedSystemColor = OverlayInfo::generateUniqueColor(m_systemName);
+    }
+    else {
+        m_cachedSystemColor = cfg.systemNameColor();
+    }
+
+    updateOverlays();
+
+    if (m_overlayWidget) {
+        m_overlayWidget->setSystemName(systemName);
+    }
 }
 
 void ThumbnailWidget::refreshSystemColor() {
@@ -225,7 +247,13 @@ void ThumbnailWidget::updateOverlays() {
       QFont systemFont = cfg.systemNameFont();
       systemFont.setBold(true);
 
-      OverlayElement sysElement(m_systemName, m_cachedSystemColor, pos, true,
+      QString displaySystem = m_systemName;
+
+      if (m_dotsCount > 0) {
+          displaySystem += QString("●").repeated(m_dotsCount);
+      }
+
+      OverlayElement sysElement(displaySystem, m_cachedSystemColor, pos, true,
                                 systemFont, cfg.systemNameOffsetX(),
                                 cfg.systemNameOffsetY());
       m_overlays.append(sysElement);
