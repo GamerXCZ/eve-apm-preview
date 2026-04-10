@@ -11,6 +11,7 @@
 #include <QtMath>
 #include <cmath>
 #include <dwmapi.h>
+#include <QInputDialog>
 
 #pragma comment(lib, "dwmapi.lib")
 
@@ -61,6 +62,12 @@ void ThumbnailWidget::setCharacterName(const QString &characterName) {
         m_customName.isEmpty() ? m_characterName : m_customName;
     m_overlayWidget->setCharacterName(displayName);
   }
+}
+
+void OverlayWidget::setCustomText(const QString& text) {
+    if (m_customText == text) return;
+    m_customText = text;
+    update();
 }
 
 void ThumbnailWidget::setCustomName(const QString &customName) {
@@ -459,6 +466,32 @@ void ThumbnailWidget::paintEvent(QPaintEvent *) {
 
 void ThumbnailWidget::mousePressEvent(QMouseEvent *event) {
   const Config &cfg = Config::instance();
+
+  if ((event->modifiers() & Qt::ControlModifier) &&
+      event->button() == Qt::RightButton) {
+
+      bool ok = false;
+
+      QString text = QInputDialog::getText(
+          this,
+          "Custom Text",
+          "Enter text:",
+          QLineEdit::Normal,
+          m_customOverlayText,
+          &ok
+      );
+
+      if (ok) {
+          m_customOverlayText = text;
+
+          if (m_overlayWidget) {
+              m_overlayWidget->setCustomText(text);
+          }
+      }
+
+      return;
+  }
+
   if (cfg.lockThumbnailPositions() && !cfg.isConfigDialogOpen()) {
     if (event->button() == Qt::LeftButton) {
       m_isDragging = false;
@@ -1330,6 +1363,17 @@ void OverlayWidget::drawOverlays(QPainter &painter) {
 
   if (!m_overlayCache.isNull()) {
     painter.drawPixmap(0, 0, m_overlayCache);
+  }
+
+  if (!m_customText.isEmpty()) {
+      painter.setPen(QColor("#e5e5e5"));
+
+      QFont f = painter.font();
+      f.setPointSize(20);
+      f.setBold(true);
+      painter.setFont(f);
+
+      painter.drawText(rect(), Qt::AlignCenter, m_customText);
   }
 }
 

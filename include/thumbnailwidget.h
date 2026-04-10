@@ -28,6 +28,9 @@ struct CombatEvent {
 class ThumbnailWidget : public QWidget {
   Q_OBJECT
 
+private:
+    QString m_customOverlayText;
+
 public:
   explicit ThumbnailWidget(quintptr windowId, const QString &title,
                            QWidget *parent = nullptr);
@@ -134,7 +137,11 @@ private:
 class OverlayWidget : public QWidget {
   Q_OBJECT
 
+private:
+    QString m_customText;
+
 public:
+    void setCustomText(const QString& text);
   explicit OverlayWidget(QWidget *parent = nullptr);
 
   void setOverlays(const QVector<OverlayElement> &overlays);
