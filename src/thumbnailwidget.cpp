@@ -82,26 +82,22 @@ void ThumbnailWidget::setSystemName(const QString& systemName) {
         return;
     }
 
+    m_previousSystemName = m_systemName;
     m_systemName = systemName;
 
-    //  start animace teček
-    m_dotsCount = 3;
+    m_showSystemTransition = !m_previousSystemName.isEmpty();
 
-    if (!m_dotsTimer) {
-        m_dotsTimer = new QTimer(this);
+    if (!m_transitionTimer) {
+        m_transitionTimer = new QTimer(this);
+        m_transitionTimer->setSingleShot(true);
 
-        connect(m_dotsTimer, &QTimer::timeout, this, [this]() {
-            if (m_dotsCount > 0) {
-                m_dotsCount--;
-                updateOverlays(); //  refresh textu
-            }
-            else {
-                m_dotsTimer->stop();
-            }
+        connect(m_transitionTimer, &QTimer::timeout, this, [this]() {
+            m_showSystemTransition = false;
+            updateOverlays();
             });
     }
 
-    m_dotsTimer->start(1000); // 1 sekunda
+    m_transitionTimer->start(3000);
 
     const Config& cfg = Config::instance();
 
@@ -247,10 +243,13 @@ void ThumbnailWidget::updateOverlays() {
       QFont systemFont = cfg.systemNameFont();
       systemFont.setBold(true);
 
-      QString displaySystem = m_systemName;
+      QString displaySystem;
 
-      if (m_dotsCount > 0) {
-          displaySystem += QString("●").repeated(m_dotsCount);
+      if (m_showSystemTransition) {
+          displaySystem = m_previousSystemName + " → " + m_systemName;
+      }
+      else {
+          displaySystem = m_systemName;
       }
 
       OverlayElement sysElement(displaySystem, m_cachedSystemColor, pos, true,

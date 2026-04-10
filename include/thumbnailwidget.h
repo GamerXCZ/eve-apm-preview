@@ -111,8 +111,9 @@ private:
   QVector<OverlayElement> m_overlays;
   QVector<ThumbnailWidget *> m_otherThumbnails;
 
-  QTimer* m_dotsTimer = nullptr;
-  int m_dotsCount = 0;
+  QString m_previousSystemName;
+  bool m_showSystemTransition = false;
+  QTimer* m_transitionTimer = nullptr;
 
   HTHUMBNAIL m_dwmThumbnail = nullptr;
   QTimer *m_updateTimer = nullptr;
