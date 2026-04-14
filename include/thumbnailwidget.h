@@ -30,6 +30,7 @@ class ThumbnailWidget : public QWidget {
 
 private:
     QString m_customOverlayText;
+    bool m_excludedFromCycle = false;
 
 public:
   explicit ThumbnailWidget(quintptr windowId, const QString &title,
@@ -75,6 +76,9 @@ public:
   bool isDragging() const { return m_isDragging; }
   bool isGroupDragging() const { return m_isGroupDragging; }
   bool isMousePressed() const { return m_mousePressed; }
+
+  bool isExcludedFromCycle() const;
+  void toggleExcludedFromCycle();
 
 signals:
   void clicked(quintptr windowId);
@@ -139,6 +143,7 @@ class OverlayWidget : public QWidget {
 
 private:
     QString m_customText;
+    bool m_excludedFromCycle = false;
 
 public:
     void setCustomText(const QString& text);
@@ -153,6 +158,7 @@ public:
   void invalidateCache();
   void pauseAnimations();
   void resumeAnimations();
+  void setExcludedFromCycle(bool excluded);
 
 protected:
   void paintEvent(QPaintEvent *event) override;

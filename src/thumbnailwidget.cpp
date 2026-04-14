@@ -464,8 +464,29 @@ void ThumbnailWidget::paintEvent(QPaintEvent *) {
   }
 }
 
+bool ThumbnailWidget::isExcludedFromCycle() const {
+    return m_excludedFromCycle;
+}
+
+void ThumbnailWidget::toggleExcludedFromCycle() {
+    m_excludedFromCycle = !m_excludedFromCycle;
+
+    if (m_overlayWidget) {
+        m_overlayWidget->setExcludedFromCycle(m_excludedFromCycle);
+    }
+
+    update();
+}
+
 void ThumbnailWidget::mousePressEvent(QMouseEvent *event) {
   const Config &cfg = Config::instance();
+
+  if ((event->modifiers() & Qt::AltModifier) &&
+      event->button() == Qt::RightButton) {
+
+      toggleExcludedFromCycle();
+      return;
+  }
 
   if ((event->modifiers() & Qt::ControlModifier) &&
       event->button() == Qt::RightButton) {
@@ -1196,6 +1217,13 @@ void OverlayWidget::resumeAnimations() {
   }
 }
 
+void OverlayWidget::setExcludedFromCycle(bool excluded) {
+    if (m_excludedFromCycle == excluded) return;
+
+    m_excludedFromCycle = excluded;
+    update();
+}
+
 void OverlayWidget::paintEvent(QPaintEvent *) {
 
   QPainter painter(this);
@@ -1220,9 +1248,17 @@ void OverlayWidget::paintEvent(QPaintEvent *) {
                       width() - 2 * (halfWidth + currentOffset),
                       height() - 2 * (halfWidth + currentOffset));
 
-    QColor borderColor = cfg.getCharacterBorderColor(m_characterName);
-    if (!borderColor.isValid()) {
-      borderColor = cfg.highlightColor();
+
+    QColor borderColor;
+
+    if (m_excludedFromCycle) {
+        borderColor = QColor("#b30202");
+    }
+    else {
+        borderColor = cfg.getCharacterBorderColor(m_characterName);
+        if (!borderColor.isValid()) {
+            borderColor = cfg.highlightColor();
+        }
     }
 
     BorderStyle style = cfg.activeBorderStyle();
@@ -1246,8 +1282,15 @@ void OverlayWidget::paintEvent(QPaintEvent *) {
                         width() - 2 * (inactiveHalfWidth + currentOffset),
                         height() - 2 * (inactiveHalfWidth + currentOffset));
 
-      QColor borderColor = hasCustomInactiveColor ? inactiveCharacterColor
-                                                  : cfg.inactiveBorderColor();
+      QColor borderColor;
+
+      if (m_excludedFromCycle) {
+          borderColor = QColor("#670000");
+      }
+      else {
+          borderColor = hasCustomInactiveColor ? inactiveCharacterColor
+              : cfg.inactiveBorderColor();
+      }
 
       BorderStyle style = cfg.inactiveBorderStyle();
       drawBorderWithStyle(painter, borderRect, borderColor, inactiveBorderWidth,

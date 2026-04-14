@@ -1512,25 +1512,38 @@ void MainWindow::updateCharacterHotkeyCycleIndices(HWND hwnd) {
   }
 }
 
-QVector<HWND> MainWindow::buildCycleWindowList(const CycleGroup &group) {
-  QVector<HWND> windowsToCycle;
+QVector<HWND> MainWindow::buildCycleWindowList(const CycleGroup& group) {
+    QVector<HWND> windowsToCycle;
 
-  for (const QString &characterName : group.characterNames) {
-    HWND hwnd = hotkeyManager->getWindowForCharacter(characterName);
-    if (hwnd && IsWindow(hwnd)) {
-      windowsToCycle.append(hwnd);
+    for (const QString& characterName : group.characterNames) {
+        HWND hwnd = hotkeyManager->getWindowForCharacter(characterName);
+
+        if (hwnd && IsWindow(hwnd)) {
+            auto* thumb = thumbnails.value(hwnd, nullptr);
+
+            if (thumb && thumb->isExcludedFromCycle()) {
+                continue;
+            }
+
+            windowsToCycle.append(hwnd);
+        }
     }
-  }
 
-  if (group.includeNotLoggedIn) {
-    for (HWND hwnd : m_notLoggedInWindows) {
-      if (!windowsToCycle.contains(hwnd)) {
-        windowsToCycle.append(hwnd);
-      }
+    if (group.includeNotLoggedIn) {
+        for (HWND hwnd : m_notLoggedInWindows) {
+            auto* thumb = thumbnails.value(hwnd, nullptr);
+
+            if (thumb && thumb->isExcludedFromCycle()) {
+                continue;
+            }
+
+            if (!windowsToCycle.contains(hwnd)) {
+                windowsToCycle.append(hwnd);
+            }
+        }
     }
-  }
 
-  return windowsToCycle;
+    return windowsToCycle;
 }
 
 void MainWindow::handleNamedCycleForward(const QString &groupName) {
